@@ -64,7 +64,7 @@
   Will override and remove any handler already associated with the supplied
   path. If the handler-fn returns :done it will automatically remove itself."
   [peer path handler]
-  (peer-handle server path  handler)
+  (peer-handle peer path  handler)
   peer)
 
 (defn osc-handlers
