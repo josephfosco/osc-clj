@@ -6,14 +6,14 @@
 ;; and send combined with an OSC timestamp.
 (def ^{:dynamic true} *osc-msg-bundle* nil)
 
-(defn- osc-send-msg
+(defn osc-send-msg
   "Send OSC msg to peer."
   [peer msg]
   (if *osc-msg-bundle*
     (swap! *osc-msg-bundle* #(conj %1 msg))
     (peer-send-msg peer msg)))
 
-(defn- osc-reply-msg
+(defn osc-reply-msg
   "Send OSC msg to peer. as a reply"
   [peer msg msg-to-reply-to]
   (peer-reply-msg peer msg msg-to-reply-to))
