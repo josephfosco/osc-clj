@@ -7,16 +7,23 @@
 (def ^{:dynamic true} *osc-msg-bundle* nil)
 
 (defn osc-send-msg
-  "Send OSC msg to peer."
+  "Send OSC msg to peer.
+
+  (osc-send-msg client {:path \"foo\" :type-tag \"i\" :args [42]})
+  "
   [peer msg]
-  (if *osc-msg-bundle*
-    (swap! *osc-msg-bundle* #(conj %1 msg))
-    (peer-send-msg peer msg)))
+  (let [msg (with-meta msg {:type :osc-msg})]
+    (if *osc-msg-bundle*
+      (swap! *osc-msg-bundle* #(conj %1 msg))
+      (peer-send-msg peer msg))))
 
 (defn osc-reply-msg
-  "Send OSC msg to peer. as a reply"
+  "Send OSC msg to peer as a reply.
+
+  (osc-reply-msg client {:path \"foo\" :type-tag \"i\" :args [42]} prev-msg)
+  "
   [peer msg msg-to-reply-to]
-  (peer-reply-msg peer msg msg-to-reply-to))
+  (peer-reply-msg peer (with-meta msg {:type :osc-msg}) msg-to-reply-to))
 
 (defn osc-listen
   "Attach a generic listener function that will be called with every incoming
