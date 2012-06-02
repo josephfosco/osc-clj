@@ -146,6 +146,8 @@
   messages. Recieves packets from chan using buf and then handles them either
   as messages or bundles - passing the source information and message itself."
   [chan buf running? all-listeners]
+  (while (not (.isBound (.socket chan)))
+    (Thread/sleep 1))
   (try
     (while @running?
       (try
