@@ -7,8 +7,8 @@
 
 (def osc-debug* (ref false))
 
-(def SEND-LOOP-TIMEOUT 100) ; ms
-(def OSC-SEND-Q-SIZE 42)
+(def SEND-LOOP-TIMEOUT 10000) ; ms
+(def OSC-SEND-Q-SIZE 512) ;;initial queue size
 (def OSC-TIMETAG-NOW 1) ; Timetag representing right now.
 (def BUFFER-SIZE 32768)
 (def PAD (byte-array 4))
