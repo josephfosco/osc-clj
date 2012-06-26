@@ -139,7 +139,8 @@
                (if (osc-msg? item)
                  (dispatch-msg all-listeners src item)
                  (dispatch-bundle all-listeners src item)))
-            dispatch-pool))
+            dispatch-pool
+            :desc "Dispatch OSC bundle"))
 
 (defn- listen-loop
   "Loop for the listen thread to execute in order to receive and handle OSC
