@@ -141,9 +141,10 @@
   (peer-send-bundle client bundle))
 
 (defmacro in-osc-bundle
-  "Send a bundle with associated timestamp enclosing the messages in body. Can
-  be used to wrap around an arbtrary form. All osc-sends within will be
-  automatically added to the bundle."
+  "Runs body and intercepts any inner calls to osc-send-msg and instead
+  of sending the OSC message, aggregates them and wraps them in an OSC
+  bundle. When the body has finished, the bundle is then sent with the
+  associated timestamp to the client."
   [client timestamp & body]
   `(binding [*osc-msg-bundle* (atom [])]
      (let [res# (do ~@body)]
