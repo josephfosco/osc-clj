@@ -3,4 +3,4 @@
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojars.technomancy/jmdns "3.2.1"]
                  [commons-net "3.0.1"]
-                 [overtone/at-at "0.2.1"]])
+                 [overtone/at-at "1.0.0"]])
