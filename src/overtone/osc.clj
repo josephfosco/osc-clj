@@ -151,6 +151,16 @@
        (osc-send-bundle ~client (mk-osc-bundle ~timestamp @*osc-msg-bundle*))
        res#)))
 
+(defmacro without-osc-bundle
+  "Runs body and ensures that any inner calls to osc-send-msg are sent
+  immediately. This is useful in the rare case you need to bypass the
+  bundling of OSC messages when code may be wrapped within
+  in-osc-bundle."
+  [client & body]
+  `(binding [*osc-msg-bundle* nil]
+     (let [res# (do ~@body)]
+       res#)))
+
 (defn osc-client
  "Returns an OSC client ready to communicate with a host on a given port via UDP"
   [host port]
