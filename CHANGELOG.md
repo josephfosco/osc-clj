@@ -10,3 +10,6 @@ _26th June 2012_
 * Wait for longer before timing out the send operation
 * Increase size of initial send queue
 * Updated dependency on `at-at` to 1.0.0
+* Add `osc-reply-msg` and `osc-reply`
+* Improve client print-method
+* Fix race condition between socket bind and receive
