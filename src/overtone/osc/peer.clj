@@ -74,7 +74,7 @@
   "Fills buf with the contents of the next packet and then decodes it into an
   OSC message map. Returns a vec of the source address of the packet and the
   message map itself. Blocks current thread if nothing to receive."
-  [chan buf]
+  [^DatagramChannel chan ^ByteBuffer buf]
   (.clear buf)
   (let [src-addr (.receive chan buf)]
     (when (pos? (.position buf))
@@ -88,7 +88,7 @@
   sequence of [peer message]). If msg contains the key :override-destination it
   overrides the :addr key of peer to the new address for the delivery of the
   specific message."
-  [running? send-q send-buf]
+  [running? ^PriorityBlockingQueue send-q ^ByteBuffer send-buf]
   (while @running?
     (if-let [res (.poll send-q
                         SEND-LOOP-TIMEOUT
@@ -215,11 +215,11 @@
   "Standard :send-fn for a peer. Sends contents of send-buf out to the peer's
   :chan to the the address associated with the peer's ref :addr. :addr is typically
   added to a peer on creation. See client-peer and server-peer."
-  [peer send-buf]
+  [peer ^ByteBuffer send-buf]
   (let [{:keys [chan addr]} peer]
     (when-not @addr
       (throw (Exception. (str "No address to send message to."))))
-    (.send chan send-buf @addr)))
+    (.send ^DatagramChannel chan send-buf @addr)))
 
 (defn bind-chan!
   "Bind a channel's datagram socket to its local port or the specified one if
@@ -404,14 +404,14 @@
   [peer bundle]
   (when @osc-debug*
     (print-debug "osc-send-bundle: " bundle))
-  (.put (:send-q peer) [peer bundle]))
+  (.put ^PriorityBlockingQueue (:send-q peer) [peer bundle]))
 
 (defn peer-send-msg
   "Send OSC msg to peer"
   [peer msg]
   (when @osc-debug*
     (print-debug "osc-send-msg: " msg))
-  (.put (:send-q peer) [peer (assoc msg :timestamp 0)]))
+  (.put ^PriorityBlockingQueue (:send-q peer) [peer (assoc msg :timestamp 0)]))
 
 (defn peer-reply-msg
   "Send OSC msg to peer"
@@ -421,7 +421,7 @@
         addr (InetSocketAddress. host port)]
     (when @osc-debug*
       (print-debug "osc-reply-msg: " msg " to: " host " : " port))
-    (.put (:send-q peer) [peer (assoc msg :timestamp 0 :override-destination addr)])))
+    (.put ^PriorityBlockingQueue (:send-q peer) [peer (assoc msg :timestamp 0 :override-destination addr)])))
 
 (defn- normalize-path
   "Clean up path.
