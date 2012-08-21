@@ -464,7 +464,10 @@
                   (.get (future @p) timeout TimeUnit/MILLISECONDS) ; Blocks until
                   @p)
                 (catch TimeoutException t
-                  nil))]
+                  nil)
+                (catch RuntimeException rte
+                  (when-not (= TimeoutException (class (.getCause rte)))
+                    (throw rte))))]
       res)))
 
 
