@@ -109,8 +109,7 @@
   Will override and remove any handler already associated with the supplied
   path."
   [peer path handler & [timeout]]
-  (peer-recv peer path handler timeout)
-  peer)
+  (peer-recv peer path handler timeout))
 
 (defn osc-reply
   "Similar to osc-send except ignores the peer's target address and instead
