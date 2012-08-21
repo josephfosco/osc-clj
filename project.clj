@@ -1,4 +1,4 @@
-(defproject overtone/osc-clj "0.8.0"
+(defproject overtone/osc-clj "0.8.1"
   :description "An Open Sound Control library for Clojure."
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojars.technomancy/jmdns "3.2.1"]

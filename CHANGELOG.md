@@ -1,4 +1,12 @@
-# at-at changelog
+# OSC-clj Changelog
+
+## 0.8.1
+_21st Aug 2012_
+
+* Fixed `osc-recv` to return the message, not the peer.
+* Added the ability to handle exceptions wrapped in RuntimeException
+  which aren't correctly unwrapped in Clojure 1.3 (this may be removed
+  in the future).
 
 ## 0.8.0
 _26th June 2012_
