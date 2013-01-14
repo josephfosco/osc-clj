@@ -156,10 +156,9 @@
   immediately. This is useful in the rare case you need to bypass the
   bundling of OSC messages when code may be wrapped within
   in-osc-bundle."
-  [client & body]
+  [& body]
   `(binding [*osc-msg-bundle* nil]
-     (let [res# (do ~@body)]
-       res#)))
+     ~@body))
 
 (defn osc-client
   "Returns an OSC client ready to communicate with a host on a given port via UDP"
