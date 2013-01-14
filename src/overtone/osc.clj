@@ -140,12 +140,16 @@
   "Runs body and intercepts any inner calls to osc-send-msg and instead
   of sending the OSC message, aggregates them and wraps them in an OSC
   bundle. When the body has finished, the bundle is then sent with the
-  associated timestamp to the client."
+  associated timestamp to the client. Handles nested calls to
+  in-osc-bundle - resulting in a nested set of bundles."
   [client timestamp & body]
-  `(binding [*osc-msg-bundle* (atom [])]
-     (let [res# (do ~@body)]
-       (osc-send-bundle ~client (mk-osc-bundle ~timestamp @*osc-msg-bundle*))
-       res#)))
+  `(let [[bundle# body-res#] (binding [*osc-msg-bundle* (atom [])]
+                               (let [res# (do ~@body)]
+                                 [(mk-osc-bundle ~timestamp @*osc-msg-bundle*) res#]))]
+        (if *osc-msg-bundle*
+          (swap! *osc-msg-bundle* conj bundle#)
+          (osc-send-bundle ~client bundle#))
+        body-res#))
 
 (defmacro without-osc-bundle
   "Runs body and ensures that any inner calls to osc-send-msg are sent
