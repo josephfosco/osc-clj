@@ -57,7 +57,7 @@
 
 (defn osc-encode-bundle
   "Encode bundle into buf."
-  [buf bundle]
+  [buf bundle send-nested-osc-bundles?]
   (encode-string buf "#bundle")
   (encode-timetag buf (:timestamp bundle))
   (doseq [item (:items bundle)]
@@ -67,7 +67,11 @@
     ; size based on the new buffer position.
     (let [start-pos (.position buf)]
       (.putInt buf (int 0))
-      (osc-encode-packet buf item)
+      (if (osc-msg? item)
+        (osc-encode-msg buf item)
+        (if send-nested-osc-bundles?
+          (osc-encode-bundle buf item)
+          (throw (Exception. "Error - nesting OSC bundles has been disabled. This is functionality is typically disabled to ensure compatibility with some OSC servers (such as SuperCollider) that don't have support for nested OSC bundles"))))
       (let [end-pos (.position buf)]
         (.position buf start-pos)
         (.putInt buf (- end-pos start-pos 4))

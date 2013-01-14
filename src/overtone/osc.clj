@@ -158,15 +158,16 @@
        res#)))
 
 (defn osc-client
- "Returns an OSC client ready to communicate with a host on a given port via UDP"
-  [host port]
-  (client-peer host port))
+  "Returns an OSC client ready to communicate with a host on a given port via UDP"
+  ([host port] (osc-client host port true))
+  ([host port send-nested-osc-bundles?]
+     (client-peer host port send-nested-osc-bundles?)))
 
 (defn osc-peer
   "Returns a generic OSC peer. You will need to configure it to make
   it act either as a server or client."
-  []
-  (peer))
+  ([] (peer))
+  ([listen? send-nested-osc-bundles?] (peer listen? send-nested-osc-bundles?)))
 
 (defn osc-target
   "Update the target address of an OSC client so future calls to osc-send
@@ -181,7 +182,9 @@
   can be passed as an optional param. If the zero-conf-name is set to nil
   zeroconf wont' be used."
   ([port] (osc-server port "osc-clj"))
-  ([port zero-conf-name] (server-peer port zero-conf-name)))
+  ([port zero-conf-name] (osc-server port zero-conf-name true))
+  ([port zero-conf-name send-nested-osc-bundles?]
+     (server-peer port zero-conf-name send-nested-osc-bundles?)))
 
 (defn osc-close
   "Close an osc-peer, works for both clients and servers. If peer has been

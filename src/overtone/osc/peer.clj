@@ -88,7 +88,7 @@
   sequence of [peer message]). If msg contains the key :override-destination it
   overrides the :addr key of peer to the new address for the delivery of the
   specific message."
-  [running? ^PriorityBlockingQueue send-q ^ByteBuffer send-buf]
+  [running? ^PriorityBlockingQueue send-q ^ByteBuffer send-buf send-nested-osc-bundles?]
   (while @running?
     (if-let [res (.poll send-q
                         SEND-LOOP-TIMEOUT
@@ -98,11 +98,12 @@
             peer     (if new-dest
                        (assoc peer :addr (atom new-dest))
                        peer)]
-        (cond
-          (osc-msg? m) (osc-encode-msg send-buf m)
-          (osc-bundle? m) (osc-encode-bundle send-buf m))
-        (.flip send-buf)
+
         (try
+          (cond
+           (osc-msg? m) (osc-encode-msg send-buf m)
+           (osc-bundle? m) (osc-encode-bundle send-buf m send-nested-osc-bundles?))
+          (.flip send-buf)
           ((:send-fn peer) peer send-buf)
           (catch Exception e
             (print-debug "Exception in send-loop: " e  "\nstacktrace: "
@@ -237,8 +238,6 @@
   "Create a generic peer which is capable of both sending and receiving/handling
   OSC messages via a DatagramChannel (UDP).
 
-  default opts -> {:no-binding false, :listen false}
-
   Sending:
   Creates a thread for sending packets out which which will pull OSC message
   maps from the :send-q, encode them to binary and send them using the fn in
@@ -254,8 +253,8 @@
   handlers are dispatched by OSC node (a.k.a. path).
 
   You must explicitly bind the peer's :chan to receive incoming messages."
-  ([] (peer false))
-  ([listen?]
+  ([] (peer false true))
+  ([listen? send-nested-osc-bundles?]
      (let [chan             (DatagramChannel/open)
            rcv-buf          (ByteBuffer/allocate BUFFER-SIZE)
            send-buf         (ByteBuffer/allocate BUFFER-SIZE)
@@ -267,7 +266,7 @@
            handlers         (ref {})
            default-listener (mk-default-listener handlers)
            listeners        (ref {})
-           send-thread      (sender-thread running? send-q send-buf)
+           send-thread      (sender-thread running? send-q send-buf send-nested-osc-bundles?)
            listen-thread    (when listen?
                               (listener-thread chan rcv-buf running? {:listeners listeners
                                                                       :default default-listener}))]
@@ -322,21 +321,23 @@
   "Returns an OSC client ready to communicate with a host on a given port.
   Clients also listen for incoming messages (such as responses from the server
   it communicates with."
- [host port]
- (when-not (integer? port)
-   (throw (Exception. (str "port should be an integer - got: " port))))
- (when-not (string? host)
-   (throw (Exception. (str "host should be a string - got:" host))))
- (let [host  (string/trim host)
-       peer (peer :with-listener)
-       chan (:chan peer)]
-   (bind-chan! chan)
-   (with-meta
-     (assoc peer
-       :host (ref host)
-       :port (ref port)
-       :addr (ref (InetSocketAddress. host port)))
-     {:type ::client})))
+  ([host port] (client-peer host port true))
+  ([host port send-nested-osc-bundles?]
+     (when-not (integer? port)
+       (throw (Exception. (str "port should be an integer - got: " port))))
+     (when-not (string? host)
+       (throw (Exception. (str "host should be a string - got:" host))))
+     (let [host  (string/trim host)
+           peer (peer :with-listener send-nested-osc-bundles?)
+           chan (:chan peer)]
+       (bind-chan! chan)
+       (with-meta
+         (assoc peer
+           :host (ref host)
+           :port (ref port)
+           :addr (ref (InetSocketAddress. host port))
+           :send-nested-osc-bundles? send-nested-osc-bundles?)
+         {:type ::client}))))
 
 (defmethod print-method ::client [peer w]
   (.write w (format "#<osc-client: destination[%s:%s] open?[%s] n-listeners[%s] n-handlers[%s]>"  @(:host peer) @(:port peer) @(:running? peer) (num-listeners peer) (num-handlers peer))))
@@ -363,22 +364,24 @@
 
 (defn server-peer
   "Returns a live OSC server ready to register handler functions."
-  [port zero-conf-name]
-  (when-not (integer? port)
-    (throw (Exception. (str "port should be an integer - got: " port))))
-  (when-not (string? zero-conf-name)
-    (throw (Exception. (str "zero-conf-name should be a string - got:" zero-conf-name))))
-  (let [peer (peer :with-listener)
-        chan (:chan peer)]
-    (bind-chan! chan port)
-    (register-zero-conf-service zero-conf-name port)
-    (with-meta
-      (assoc peer
-        :host (ref nil)
-        :port (ref port)
-        :addr (ref nil)
-        :zero-conf-name zero-conf-name)
-      {:type ::server})))
+  ([port zero-conf-name] (server-peer port zero-conf-name true))
+  ([port zero-conf-name send-nested-osc-bundles?]
+     (when-not (integer? port)
+       (throw (Exception. (str "port should be an integer - got: " port))))
+     (when-not (string? zero-conf-name)
+       (throw (Exception. (str "zero-conf-name should be a string - got:" zero-conf-name))))
+     (let [peer (peer :with-listener send-nested-osc-bundles?)
+           chan (:chan peer)]
+       (bind-chan! chan port)
+       (register-zero-conf-service zero-conf-name port)
+       (with-meta
+         (assoc peer
+           :send-nested-osc-bundles? send-nested-osc-bundles?
+           :host (ref nil)
+           :port (ref port)
+           :addr (ref nil)
+           :zero-conf-name zero-conf-name)
+         {:type ::server}))))
 
 (defmethod print-method ::server [peer w]
   (.write w (format "#<osc-server: n-listeners[%s] n-handlers[%s] port[%s] open?[%s]>"  (num-listeners peer) (num-handlers peer) @(:port peer) @(:running? peer))))
