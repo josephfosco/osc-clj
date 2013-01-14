@@ -1,10 +1,7 @@
 (ns overtone.osc
   (:use [overtone.osc.util]
-        [overtone.osc.peer]))
-
-;; We use binding to *osc-msg-bundle* to bundle messages
-;; and send combined with an OSC timestamp.
-(def ^{:dynamic true} *osc-msg-bundle* nil)
+        [overtone.osc.peer]
+        [overtone.osc.dyn-vars]))
 
 (defn osc-send-msg
   "Send OSC msg to peer.
