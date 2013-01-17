@@ -1,5 +1,14 @@
 # OSC-clj Changelog
 
+## 0.9.0
+_17th January 2013_
+
+* Allow nesting of calls to `in-osc-bundle` to create nested bundles
+* Add `in-unested-osc-bundle` to allow for the creation of bundles which are sent immediately and aren't nested in any outer bundle
+* Teach peers to disable support for nesting bundles when sending OSC messages (some servers, such as the SuperCollider server don't support them)
+* Update dependency on JMDNS to 3.4.1
+* Update dependency on at-at to 1.1.1
+
 ## 0.8.1
 _21st Aug 2012_
 
